@@ -13,6 +13,9 @@ export default function AnalyticsPage() {
     queryKey: ['analyticsBlocks'],
     queryFn: () => getLatestBlocks(50),
     refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // Don't cache data
+    refetchOnMount: 'always', // Always fetch fresh data on mount
   });
 
   const analytics = useMemo(() => {

@@ -69,12 +69,12 @@ export default function Header() {
 
   return (
     <header className="lava-gradient text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-2xl font-bold hover:scale-105 transition-transform">
+          <Link href="/" className="flex items-center gap-2 text-xl sm:text-2xl font-bold hover:scale-105 transition-transform">
             <div className="relative">
-              <Activity className="w-8 h-8" />
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8" />
               <div className="absolute inset-0 w-8 h-8 animate-ping opacity-20">
                 <Activity className="w-8 h-8" />
               </div>
@@ -104,15 +104,15 @@ export default function Header() {
           </form>
 
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {/* Navigation */}
-            <nav className="flex items-center gap-3">
-              <Link href="/analytics" className="px-4 py-2 hover:bg-white/20 rounded-lg transition-all font-medium flex items-center gap-2">
+            <nav className="flex items-center gap-2">
+              <Link href="/analytics" className="px-3 py-2 hover:bg-white/20 rounded-lg transition-all font-medium flex items-center gap-2 text-sm md:text-base">
                 <Sparkles className="w-4 h-4" />
-                Analytics
+                <span className="hidden sm:inline">Analytics</span>
               </Link>
-              <Link href="/whales" className="px-4 py-2 hover:bg-white/20 rounded-lg transition-all font-medium">
-                🐋 Whales
+              <Link href="/whales" className="px-3 py-2 hover:bg-white/20 rounded-lg transition-all font-medium text-sm md:text-base">
+                Whales
               </Link>
             </nav>
 

@@ -1,4 +1,4 @@
-export const REFRESH_INTERVAL = 5000; // 5 seconds
+export const REFRESH_INTERVAL = 2000; // 2 seconds for instant updates
 export const BLOCKS_PER_PAGE = 10;
 export const TRANSACTIONS_PER_PAGE = 20;
 export const WHALE_THRESHOLD_LARGE = 10000; // ETH

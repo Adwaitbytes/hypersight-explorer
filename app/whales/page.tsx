@@ -14,7 +14,10 @@ export default function WhaleTrackerPage() {
   const { data: blocks, isLoading } = useQuery({
     queryKey: ['whaleBlocks'],
     queryFn: () => getLatestBlocks(30),
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 2000, // Refresh every 2 seconds
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // Don't cache data
+    refetchOnMount: 'always', // Always fetch fresh data on mount
   });
 
   const whaleTransactions = useMemo(() => {
@@ -61,12 +64,12 @@ export default function WhaleTrackerPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg p-8 shadow-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-4xl">🐋</span>
-          <h1 className="text-3xl font-bold">Whale Tracker</h1>
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg p-4 sm:p-6 md:p-8 shadow-lg">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8" />
+          <h1 className="text-2xl sm:text-3xl font-bold">Whale Tracker</h1>
         </div>
-        <p className="text-purple-100 text-lg mb-4">
+        <p className="text-purple-100 text-sm sm:text-base md:text-lg mb-3 sm:mb-4">
           Track large transactions in real-time on Hyperliquid
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -101,11 +104,11 @@ export default function WhaleTrackerPage() {
           <select
             value={minValue}
             onChange={(e) => setMinValue(Number(e.target.value))}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+            className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
           >
-            <option value={10000}>🐋 Large (&gt; 10,000 ETH)</option>
-            <option value={50000}>🦈 Huge (&gt; 50,000 ETH)</option>
-            <option value={100000}>🐳 Mega (&gt; 100,000 ETH)</option>
+            <option value={10000}>Large (&gt; 10,000 ETH)</option>
+            <option value={50000}>Huge (&gt; 50,000 ETH)</option>
+            <option value={100000}>Mega (&gt; 100,000 ETH)</option>
             <option value={1000}>All (&gt; 1,000 ETH)</option>
           </select>
           <span className="text-sm text-gray-500">
@@ -136,8 +139,8 @@ export default function WhaleTrackerPage() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <span className="text-2xl" title={tx.size}>
-                        {getWhaleEmoji(tx.size)}
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full" title={tx.size}>
+                        {tx.size === 'mega' ? 'MEGA' : tx.size === 'huge' ? 'HUGE' : 'LARGE'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -190,10 +193,10 @@ export default function WhaleTrackerPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
-          <span className="text-6xl mb-4 block">🐟</span>
-          <h3 className="text-xl font-bold mb-2">No Whale Transactions Found</h3>
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700">
+          <Filter className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
+          <h3 className="text-lg sm:text-xl font-bold mb-2">No Whale Transactions Found</h3>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Try lowering the minimum value filter to see more transactions
           </p>
         </div>

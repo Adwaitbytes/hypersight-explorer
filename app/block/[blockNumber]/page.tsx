@@ -69,17 +69,17 @@ export default function BlockDetailPage({ params }: { params: { blockNumber: str
       </Link>
 
       {/* Block Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h1 className="text-3xl font-bold mb-2">Block #{hexToDecimal(block.number)}</h1>
-        <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Block #{hexToDecimal(block.number)}</h1>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 flex items-center gap-2">
           <Clock className="w-4 h-4" />
           {timestamp} ({relativeTime})
         </p>
       </div>
 
       {/* Block Details */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-bold mb-4">Block Details</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg sm:text-xl font-bold mb-4">Block Details</h2>
         
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -115,11 +115,11 @@ export default function BlockDetailPage({ params }: { params: { blockNumber: str
               <div className="flex items-center gap-2">
                 {block.miner === '0x0000000000000000000000000000000000000000' ? (
                   <div className="flex flex-col">
-                    <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                    <span className="font-mono text-xs sm:text-sm text-gray-500 dark:text-gray-400 break-all">
                       {truncateHash(block.miner)}
                     </span>
                     <span className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                      ℹ️ Hyperliquid uses Proof of Stake (no traditional miner)
+                      Hyperliquid uses Proof of Stake (no traditional miner)
                     </span>
                   </div>
                 ) : (
@@ -158,8 +158,8 @@ export default function BlockDetailPage({ params }: { params: { blockNumber: str
 
       {/* Transactions */}
       {txCount > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-bold mb-4">Transactions ({txCount})</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-bold mb-4">Transactions ({txCount})</h2>
           
           <div className="overflow-x-auto">
             <table className="w-full">
