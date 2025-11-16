@@ -2,143 +2,86 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getTransaction, getTransactionReceipt } from '@/lib/lavaRpc';
-import { hexToDecimal, formatTimestamp, formatEth, truncateHash, formatGwei, getRelativeTime } from '@/lib/utils';
+import { hexToDecimal, formatEth, formatGwei } from '@/lib/utils';
 import CopyButton from '@/components/CopyButton';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, CheckCircle, XCircle, AlertCircle, Hash, Clock } from 'lucide-react';
+import { formatTimestamp, getRelativeTime } from '@/lib/utils';
 
-export default function TransactionDetailPage({ params }: { params: { hash: string } }) {
+export default function TransactionPage({ params }: { params: { hash: string } }) {
   const { hash } = params;
-  
-  const { data: tx, isLoading: txLoading, error: txError } = useQuery({
+
+  const { data: tx, isLoading, error } = useQuery({
     queryKey: ['transaction', hash],
-    queryFn: async () => {
-      const result = await getTransaction(hash);
-      console.log('Transaction result:', result); // Debug log
-      if (!result) {
-        throw new Error('Transaction not found');
-      }
-      return result;
-    },
-    retry: false,
+    queryFn: () => getTransaction(hash),
+    staleTime: 0,
+    gcTime: 0,
   });
 
-  const { data: receipt, isLoading: receiptLoading } = useQuery({
-    queryKey: ['receipt', hash],
+  const { data: receipt } = useQuery({
+    queryKey: ['transactionReceipt', hash],
     queryFn: () => getTransactionReceipt(hash),
-    enabled: !!tx,
+    enabled: !!tx, // Only fetch receipt if transaction exists
   });
 
-  if (txLoading || receiptLoading) {
+  const blockNumber = tx?.blockNumber ? hexToDecimal(tx.blockNumber) : null;
+  const isSuccess = receipt?.status === '0x1';
+
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Loading transaction details...</p>
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  if (txError || !tx) {
+  if (error || !tx) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8 text-center">
-          <XCircle className="w-16 h-16 text-red-600 dark:text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-3">Transaction Not Found</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-2">The transaction hash doesn't exist on this network.</p>
-          
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 my-6 text-left">
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">💡 Troubleshooting Tips:</p>
-            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-purple-600 dark:text-purple-400 font-bold">1.</span>
-                <span><strong>Wrong Network?</strong> Check if you're on Mainnet or Testnet (toggle in header)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-purple-600 dark:text-purple-400 font-bold">2.</span>
-                <span><strong>Full Hash Required:</strong> Transaction hash must be 66 characters (0x + 64 hex characters)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-purple-600 dark:text-purple-400 font-bold">3.</span>
-                <span><strong>Pending Transaction:</strong> Transaction might not be mined yet</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-purple-600 dark:text-purple-400 font-bold">4.</span>
-                <span><strong>Copy from Dashboard:</strong> Use the copy icon on transaction cards to get the full hash</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Searched for:</p>
-            <code className="text-xs font-mono break-all text-gray-800 dark:text-gray-200">{hash}</code>
-          </div>
-          
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-600">
+        <h2 className="text-xl font-bold mb-2">Transaction Not Found</h2>
+        <p>Could not find transaction with hash {hash}. Please check the hash and try again.</p>
+        <Link href="/" className="inline-flex items-center gap-2 mt-4 text-blue-600 hover:underline">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
       </div>
     );
   }
-
-  const isSuccess = receipt && receipt.status === '0x1';
-  const blockNumber = tx.blockNumber ? hexToDecimal(tx.blockNumber) : 'Pending';
 
   return (
     <div className="space-y-6">
       {/* Back Button */}
       <Link href="/" className="inline-flex items-center gap-2 text-blue-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
-        Back to Transactions
+        Back
       </Link>
 
       {/* Transaction Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Transaction Details</h1>
-            <p className="font-mono text-sm text-gray-600 dark:text-gray-400">{tx.hash}</p>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <ArrowRightLeft className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
-          {receipt && (
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              isSuccess 
-                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
-                : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-            }`}>
-              {isSuccess ? (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-semibold">Success</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-5 h-5" />
-                  <span className="font-semibold">Failed</span>
-                </>
-              )}
-            </div>
-          )}
+          <div>
+            <h1 className="text-2xl font-bold">Transaction</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {tx.blockNumber ? `Block #${blockNumber}` : 'Pending'} • {tx.blockNumber && getRelativeTime(tx.blockNumber)}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Transaction Overview */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-bold mb-4">Overview</h2>
-        
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="md:col-span-2">
               <span className="text-sm text-gray-600 dark:text-gray-400 block mb-2">Transaction Hash</span>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-sm break-all">{tx.hash}</span>
-                <CopyButton text={tx.hash} label="hash" />
+                <CopyButton text={tx.hash} />
               </div>
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <span className="text-sm text-gray-600 dark:text-gray-400 block mb-2">Status</span>
               <div className="flex items-center gap-2">
@@ -181,7 +124,7 @@ export default function TransactionDetailPage({ params }: { params: { hash: stri
                 <Link href={`/address/${tx.from}`} className="font-mono text-sm text-blue-600 hover:underline">
                   {tx.from}
                 </Link>
-                <CopyButton text={tx.from} label="address" />
+                <CopyButton text={tx.from} />
               </div>
             </div>
 
@@ -193,7 +136,7 @@ export default function TransactionDetailPage({ params }: { params: { hash: stri
                     <Link href={`/address/${tx.to}`} className="font-mono text-sm text-blue-600 hover:underline">
                       {tx.to}
                     </Link>
-                    <CopyButton text={tx.to} label="address" />
+                    <CopyButton text={tx.to} />
                   </>
                 ) : (
                   <span className="text-gray-500">Contract Creation</span>

@@ -1,93 +1,76 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getBlockByNumber, getTransaction, getTransactionReceipt } from '@/lib/lavaRpc';
-import { hexToDecimal, formatTimestamp, formatEth, truncateHash, getRelativeTime } from '@/lib/utils';
+import { getBlockByNumber, getTransactionCount } from '@/lib/lavaRpc';
+import { hexToDecimal, formatEth, truncateHash } from '@/lib/utils';
 import CopyButton from '@/components/CopyButton';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, Clock, Coins, Fuel } from 'lucide-react';
+import { ArrowLeft, Box, Hash, Clock, User, Zap, Database } from 'lucide-react';
+import { formatTimestamp, getRelativeTime } from '@/lib/utils';
 
-export default function BlockDetailPage({ params }: { params: { blockNumber: string } }) {
+export default function BlockPage({ params }: { params: { blockNumber: string } }) {
   const { blockNumber } = params;
-  
+
   const { data: block, isLoading, error } = useQuery({
     queryKey: ['block', blockNumber],
-    queryFn: async () => {
-      const result = await getBlockByNumber(parseInt(blockNumber));
-      if (!result) {
-        throw new Error('Block not found');
-      }
-      return result;
-    },
-    retry: false,
+    queryFn: () => getBlockByNumber(blockNumber),
+    staleTime: 0,
+    gcTime: 0,
   });
+
+  // Get transaction count
+  const txCount = Array.isArray(block?.transactions) ? block.transactions.length : 0;
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Loading block details...</p>
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (error || !block) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8 text-center">
-          <XCircle className="w-16 h-16 text-red-600 dark:text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-3">Block Not Found</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">The block you're looking for doesn't exist or hasn't been mined yet.</p>
-          
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Searched for:</p>
-            <code className="text-xs font-mono text-gray-800 dark:text-gray-200">Block #{blockNumber}</code>
-          </div>
-          
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-600">
+        <h2 className="text-xl font-bold mb-2">Block Not Found</h2>
+        <p>Could not find block #{blockNumber}. Please check the block number and try again.</p>
+        <Link href="/" className="inline-flex items-center gap-2 mt-4 text-blue-600 hover:underline">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
       </div>
     );
   }
-
-  const txCount = Array.isArray(block.transactions) ? block.transactions.length : 0;
-  const timestamp = formatTimestamp(block.timestamp);
-  const relativeTime = getRelativeTime(block.timestamp);
 
   return (
     <div className="space-y-6">
       {/* Back Button */}
       <Link href="/" className="inline-flex items-center gap-2 text-blue-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
-        Back to Blocks
+        Back
       </Link>
 
       {/* Block Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Block #{hexToDecimal(block.number)}</h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          {timestamp} ({relativeTime})
-        </p>
-      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+            <Box className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Block #{hexToDecimal(block.number)}</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {getRelativeTime(block.timestamp)} • {formatTimestamp(block.timestamp)}
+            </p>
+          </div>
+        </div>
 
-      {/* Block Details */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg sm:text-xl font-bold mb-4">Block Details</h2>
-        
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
             <div className="md:col-span-3">
               <span className="text-sm text-gray-600 dark:text-gray-400 block mb-1">Block Hash</span>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-sm break-all">{block.hash}</span>
-                <CopyButton text={block.hash} label="hash" />
+                <CopyButton text={block.hash} />
               </div>
             </div>
           </div>
