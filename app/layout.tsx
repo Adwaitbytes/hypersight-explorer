@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/themeContext";
 import { NetworkProvider } from "@/lib/networkContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ChatBot from "@/components/ChatBot";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({
                 </main>
                 <Footer />
               </div>
+              <ChatBot />
             </Providers>
           </NetworkProvider>
         </ThemeProvider>

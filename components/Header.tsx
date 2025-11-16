@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, Search, Moon, Sun, Sparkles } from 'lucide-react';
+import { Activity, Search, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { detectSearchType } from '@/lib/utils';
@@ -68,20 +68,13 @@ export default function Header() {
   };
 
   return (
-    <header className="lava-gradient text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm">
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-4">
+    <header className="border-b bg-background sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-xl sm:text-2xl font-bold hover:scale-105 transition-transform">
-            <div className="relative">
-              <Activity className="w-6 h-6 sm:w-8 sm:h-8" />
-              <div className="absolute inset-0 w-8 h-8 animate-ping opacity-20">
-                <Activity className="w-8 h-8" />
-              </div>
-            </div>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200">
-              Hyperliquid Explorer
-            </span>
+          <Link href="/" className="flex items-center gap-2 text-xl font-semibold">
+            <Activity className="w-6 h-6 text-primary" />
+            <span className="text-primary">Hyperliquid Explorer</span>
           </Link>
 
           {/* Search Bar */}
@@ -92,49 +85,48 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Address / Txn Hash / Block"
-                className="w-full px-4 py-3 pr-12 rounded-xl text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all shadow-lg"
+                className="w-full px-4 py-2 pr-10 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
               >
-                <Search className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <Search className="w-4 h-4" />
               </button>
             </div>
           </form>
 
           {/* Controls */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {/* Navigation */}
-            <nav className="flex items-center gap-2">
-              <Link href="/analytics" className="px-3 py-2 hover:bg-white/20 rounded-lg transition-all font-medium flex items-center gap-2 text-sm md:text-base">
-                <Sparkles className="w-4 h-4" />
-                <span className="hidden sm:inline">Analytics</span>
+            <nav className="flex items-center gap-1">
+              <Link href="/analytics" className="px-3 py-1.5 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">
+                Analytics
               </Link>
-              <Link href="/whales" className="px-3 py-2 hover:bg-white/20 rounded-lg transition-all font-medium text-sm md:text-base">
+              <Link href="/whales" className="px-3 py-1.5 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">
                 Whales
               </Link>
             </nav>
 
             {/* Network Switcher */}
             {mounted && (
-              <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 backdrop-blur-sm">
+              <div className="flex items-center gap-1 bg-secondary rounded-md p-1">
                 <button
                   onClick={() => setNetwork('mainnet')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 py-1 text-xs font-medium rounded transition-all ${
                     network === 'mainnet'
-                      ? 'bg-white text-purple-600 shadow-lg'
-                      : 'text-white/70 hover:text-white'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Mainnet
                 </button>
                 <button
                   onClick={() => setNetwork('testnet')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 py-1 text-xs font-medium rounded transition-all ${
                     network === 'testnet'
-                      ? 'bg-white text-purple-600 shadow-lg'
-                      : 'text-white/70 hover:text-white'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Testnet
@@ -146,30 +138,17 @@ export default function Header() {
             {mounted && (
               <button
                 onClick={toggleTheme}
-                className="p-2.5 hover:bg-white/20 rounded-xl transition-all"
+                className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
                 aria-label="Toggle theme"
               >
                 {theme === 'dark' ? (
-                  <Sun className="w-5 h-5" />
+                  <Sun className="w-4 h-4" />
                 ) : (
-                  <Moon className="w-5 h-5" />
+                  <Moon className="w-4 h-4" />
                 )}
               </button>
             )}
           </div>
-        </div>
-
-        {/* Powered by Lava Badge */}
-        <div className="flex justify-center mt-3">
-          <a
-            href="https://www.lavanet.xyz/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-medium transition-all backdrop-blur-sm network-badge"
-          >
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            Powered by Lava Network RPC
-          </a>
         </div>
       </div>
     </header>

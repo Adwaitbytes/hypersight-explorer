@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { WhaleTransaction } from "@/lib/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -132,4 +133,157 @@ export function formatGwei(wei: string | number): string {
   const weiNum = typeof wei === 'string' ? BigInt(wei) : BigInt(wei);
   const gwei = Number(weiNum) / 1e9;
   return gwei.toFixed(2);
+}
+
+// Fetch live market data for Hyperliquid token
+export async function getHyperliquidTokenPrice(): Promise<{ 
+  usd: number; 
+  usd_24h_change: number;
+  market_cap: number;
+  volume_24h: number;
+} | null> {
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/coins/hyperliquid');
+    const data = await response.json();
+    
+    if (data && data.market_data) {
+      return {
+        usd: data.market_data.current_price.usd,
+        usd_24h_change: data.market_data.price_change_percentage_24h,
+        market_cap: data.market_data.market_cap.usd,
+        volume_24h: data.market_data.total_volume.usd
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching Hyperliquid token price:', error);
+    return null;
+  }
+}
+
+// Fetch live market data for Lava Network token
+export async function getLavaNetworkTokenPrice(): Promise<{ 
+  usd: number; 
+  usd_24h_change: number;
+  market_cap: number;
+  volume_24h: number;
+} | null> {
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/coins/lava-network');
+    const data = await response.json();
+    
+    if (data && data.market_data) {
+      return {
+        usd: data.market_data.current_price.usd,
+        usd_24h_change: data.market_data.price_change_percentage_24h,
+        market_cap: data.market_data.market_cap.usd,
+        volume_24h: data.market_data.total_volume.usd
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching Lava Network token price:', error);
+    return null;
+  }
+}
+
+// Fetch social media data for Hyperliquid and Lava Network
+export async function getSocialMediaData(): Promise<{
+  hyperliquid: {
+    twitter: string;
+    discord: string;
+    telegram: string;
+    blog: string;
+    website: string;
+  };
+  lavanet: {
+    twitter: string;
+    discord: string;
+    telegram: string;
+    blog: string;
+    website: string;
+  };
+} | null> {
+  try {
+    // Fetch Hyperliquid data
+    const hyperliquidResponse = await fetch('https://api.coingecko.com/api/v3/coins/hyperliquid');
+    const hyperliquidData = await hyperliquidResponse.json();
+    
+    // Fetch Lava Network data
+    const lavanetResponse = await fetch('https://api.coingecko.com/api/v3/coins/lava-network');
+    const lavanetData = await lavanetResponse.json();
+    
+    return {
+      hyperliquid: {
+        twitter: hyperliquidData.links?.twitter_screen_name ? 
+          `https://twitter.com/${hyperliquidData.links.twitter_screen_name}` : '',
+        discord: hyperliquidData.links?.official_forum_url?.find((url: string) => url.includes('discord')) || '',
+        telegram: hyperliquidData.links?.telegram_channel_identifier ? 
+          `https://t.me/${hyperliquidData.links.telegram_channel_identifier}` : '',
+        blog: hyperliquidData.links?.official_forum_url?.find((url: string) => url.includes('blog')) || 
+              hyperliquidData.links?.official_forum_url?.find((url: string) => url.includes('medium')) || '',
+        website: hyperliquidData.links?.homepage?.[0] || ''
+      },
+      lavanet: {
+        twitter: lavanetData.links?.twitter_screen_name ? 
+          `https://twitter.com/${lavanetData.links.twitter_screen_name}` : '',
+        discord: lavanetData.links?.chat_url?.find((url: string) => url.includes('discord')) || '',
+        telegram: lavanetData.links?.telegram_channel_identifier ? 
+          `https://t.me/${lavanetData.links.telegram_channel_identifier}` : '',
+        blog: lavanetData.links?.chat_url?.find((url: string) => url.includes('blog')) || '',
+        website: lavanetData.links?.homepage?.[0] || ''
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching social media data:', error);
+    return null;
+  }
+}
+
+// Save whale transaction to localStorage
+export function saveWhaleTransaction(transaction: WhaleTransaction): void {
+  try {
+    const savedWhales = getSavedWhaleTransactions();
+    // Check if transaction already exists
+    const exists = savedWhales.some(whale => whale.hash === transaction.hash);
+    
+    if (!exists) {
+      // Add timestamp if not present
+      const whaleWithTimestamp = {
+        ...transaction,
+        savedAt: transaction.savedAt || Date.now()
+      };
+      
+      savedWhales.unshift(whaleWithTimestamp); // Add to beginning of array
+      
+      // Keep only the latest 100 whales to prevent localStorage from getting too large
+      const trimmedWhales = savedWhales.slice(0, 100);
+      
+      localStorage.setItem('whaleTransactions', JSON.stringify(trimmedWhales));
+    }
+  } catch (error) {
+    console.error('Error saving whale transaction:', error);
+  }
+}
+
+// Get saved whale transactions from localStorage
+export function getSavedWhaleTransactions(): WhaleTransaction[] {
+  try {
+    const savedWhales = localStorage.getItem('whaleTransactions');
+    return savedWhales ? JSON.parse(savedWhales) : [];
+  } catch (error) {
+    console.error('Error retrieving whale transactions:', error);
+    return [];
+  }
+}
+
+// Clear saved whale transactions
+export function clearSavedWhaleTransactions(): void {
+  try {
+    localStorage.removeItem('whaleTransactions');
+  } catch (error) {
+    console.error('Error clearing whale transactions:', error);
+  }
 }

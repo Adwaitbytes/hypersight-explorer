@@ -1,41 +1,36 @@
 'use client';
 
-import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
-import { copyToClipboard } from '@/lib/utils';
+import { Check, Copy } from 'lucide-react';
 
 interface CopyButtonProps {
   text: string;
-  label?: string;
+  className?: string;
 }
 
-export default function CopyButton({ text, label }: CopyButtonProps) {
+export default function CopyButton({ text, className = '' }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
-    const success = await copyToClipboard(text);
-    if (success) {
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
     }
   };
 
   return (
     <button
-      onClick={handleCopy}
-      className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-      title={`Copy ${label || 'to clipboard'}`}
+      onClick={copyToClipboard}
+      className={`p-1 rounded hover:bg-secondary ${className}`}
+      title="Copy to clipboard"
     >
       {copied ? (
-        <>
-          <Check className="w-3 h-3 text-green-600" />
-          <span className="text-green-600">Copied!</span>
-        </>
+        <Check className="w-4 h-4 text-green-600" />
       ) : (
-        <>
-          <Copy className="w-3 h-3" />
-          <span>Copy</span>
-        </>
+        <Copy className="w-4 h-4 text-muted-foreground hover:text-foreground" />
       )}
     </button>
   );

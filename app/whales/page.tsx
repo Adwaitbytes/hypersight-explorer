@@ -5,11 +5,19 @@ import { getLatestBlocks } from '@/lib/lavaRpc';
 import { weiToEth, formatEth, truncateHash, getRelativeTime, getWhaleEmoji } from '@/lib/utils';
 import { WhaleTransaction } from '@/lib/types';
 import Link from 'next/link';
-import { TrendingUp, Filter } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { TrendingUp, Filter, Save, Trash2 } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { saveWhaleTransaction, getSavedWhaleTransactions, clearSavedWhaleTransactions } from '@/lib/utils';
 
 export default function WhaleTrackerPage() {
   const [minValue, setMinValue] = useState(10000);
+  const [showSavedWhales, setShowSavedWhales] = useState(false);
+  const [savedWhales, setSavedWhales] = useState<WhaleTransaction[]>([]);
+
+  // Load saved whales on component mount
+  useEffect(() => {
+    setSavedWhales(getSavedWhaleTransactions());
+  }, []);
 
   const { data: blocks, isLoading } = useQuery({
     queryKey: ['whaleBlocks'],
@@ -53,6 +61,22 @@ export default function WhaleTrackerPage() {
     return whales.sort((a, b) => b.valueInEth - a.valueInEth);
   }, [blocks, minValue]);
 
+  // Combine live whales with saved whales when showing saved whales
+  const displayWhales = showSavedWhales ? [...savedWhales, ...whaleTransactions] : whaleTransactions;
+
+  // Save a whale transaction
+  const handleSaveWhale = (whale: WhaleTransaction) => {
+    saveWhaleTransaction(whale);
+    // Update the saved whales state
+    setSavedWhales(getSavedWhaleTransactions());
+  };
+
+  // Clear all saved whales
+  const handleClearSavedWhales = () => {
+    clearSavedWhaleTransactions();
+    setSavedWhales([]);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -75,7 +99,7 @@ export default function WhaleTrackerPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white/10 backdrop-blur rounded-lg p-4">
             <div className="text-2xl font-bold">{whaleTransactions.length}</div>
-            <div className="text-sm text-purple-100">Whale Transactions</div>
+            <div className="text-sm text-purple-100">Live Whale Transactions</div>
           </div>
           <div className="bg-white/10 backdrop-blur rounded-lg p-4">
             <div className="text-2xl font-bold">
@@ -94,31 +118,63 @@ export default function WhaleTrackerPage() {
         </div>
       </div>
 
-      {/* Filter */}
+      {/* Filter and Controls */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Minimum Value:
-          </label>
-          <select
-            value={minValue}
-            onChange={(e) => setMinValue(Number(e.target.value))}
-            className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-          >
-            <option value={10000}>Large (&gt; 10,000 ETH)</option>
-            <option value={50000}>Huge (&gt; 50,000 ETH)</option>
-            <option value={100000}>Mega (&gt; 100,000 ETH)</option>
-            <option value={1000}>All (&gt; 1,000 ETH)</option>
-          </select>
-          <span className="text-sm text-gray-500">
-            {whaleTransactions.length} transactions found
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Minimum Value:
+              </label>
+              <select
+                value={minValue}
+                onChange={(e) => setMinValue(Number(e.target.value))}
+                className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              >
+                <option value={10000}>Large (&gt; 10,000 ETH)</option>
+                <option value={50000}>Huge (&gt; 50,000 ETH)</option>
+                <option value={100000}>Mega (&gt; 100,000 ETH)</option>
+                <option value={1000}>All (&gt; 1,000 ETH)</option>
+              </select>
+            </div>
+            
+            {/* Saved Whales Toggle */}
+            <button
+              onClick={() => setShowSavedWhales(!showSavedWhales)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                showSavedWhales 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Save className="w-4 h-4" />
+              {showSavedWhales ? 'Showing Saved Whales' : 'Show Saved Whales'}
+            </button>
+          </div>
+          
+          {/* Clear Saved Whales Button */}
+          {savedWhales.length > 0 && (
+            <button
+              onClick={handleClearSavedWhales}
+              className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              Clear Saved ({savedWhales.length})
+            </button>
+          )}
+        </div>
+        
+        <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+          {showSavedWhales 
+            ? `${savedWhales.length} saved whales + ${whaleTransactions.length} live whales` 
+            : `${whaleTransactions.length} live whales found`}
         </div>
       </div>
 
       {/* Whale Transactions Table */}
-      {whaleTransactions.length > 0 ? (
+      {displayWhales.length > 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -130,64 +186,81 @@ export default function WhaleTrackerPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">To</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Value</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {whaleTransactions.map((tx) => (
-                  <tr 
-                    key={tx.hash} 
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full" title={tx.size}>
-                        {tx.size === 'mega' ? 'MEGA' : tx.size === 'huge' ? 'HUGE' : 'LARGE'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link 
-                        href={`/tx/${tx.hash}`}
-                        className="font-mono text-sm text-blue-600 hover:underline"
-                      >
-                        {truncateHash(tx.hash)}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link 
-                        href={`/address/${tx.from}`}
-                        className="font-mono text-xs text-blue-600 hover:underline"
-                      >
-                        {truncateHash(tx.from)}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      {tx.to ? (
+                {displayWhales.map((tx) => {
+                  const isSaved = tx.savedAt !== undefined;
+                  return (
+                    <tr 
+                      key={tx.hash} 
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full" title={tx.size}>
+                          {tx.size === 'mega' ? 'MEGA' : tx.size === 'huge' ? 'HUGE' : 'LARGE'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
                         <Link 
-                          href={`/address/${tx.to}`}
+                          href={`/tx/${tx.hash}`}
+                          className="font-mono text-sm text-blue-600 hover:underline"
+                        >
+                          {truncateHash(tx.hash)}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link 
+                          href={`/address/${tx.from}`}
                           className="font-mono text-xs text-blue-600 hover:underline"
                         >
-                          {truncateHash(tx.to)}
+                          {truncateHash(tx.from)}
                         </Link>
-                      ) : (
-                        <span className="text-gray-500 text-xs">Contract Creation</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-lg text-green-600">
-                          {formatEth(tx.value, 2)} ETH
+                      </td>
+                      <td className="px-4 py-3">
+                        {tx.to ? (
+                          <Link 
+                            href={`/address/${tx.to}`}
+                            className="font-mono text-xs text-blue-600 hover:underline"
+                          >
+                            {truncateHash(tx.to)}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-500 text-xs">Contract Creation</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-lg text-green-600">
+                            {formatEth(tx.value, 2)} ETH
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ${(tx.valueInEth * 3000).toLocaleString()} USD
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {getRelativeTime(tx.timestamp)}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          ${(tx.valueInEth * 3000).toLocaleString()} USD
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {getRelativeTime(tx.timestamp)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-3">
+                        {!isSaved ? (
+                          <button
+                            onClick={() => handleSaveWhale(tx)}
+                            className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
+                          >
+                            <Save className="w-3 h-3" />
+                            Save
+                          </button>
+                        ) : (
+                          <span className="text-xs text-gray-500">Saved</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

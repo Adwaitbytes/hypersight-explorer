@@ -78,6 +78,7 @@ export interface WhaleTransaction {
   timestamp: number;
   blockNumber: string;
   size: 'large' | 'huge' | 'mega';
+  savedAt?: number; // Add this property for tracking when the whale was saved
 }
 
 export interface AnalyticsData {
