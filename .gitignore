@@ -45,7 +45,7 @@ credentials.json
 # DOCUMENTATION (as per user request)
 # ============================================
 # Do not push README and documentation
-README.md
+
 SUBMISSION_GUIDE.md
 QUICK_COMMANDS.md
 DATA_AUTHENTICITY.md
