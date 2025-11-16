@@ -46,7 +46,7 @@ export default function AddressPage({ params }: { params: { address: string } })
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm break-all">{address}</span>
-          <CopyButton text={address} label="address" />
+          <CopyButton text={address} />
         </div>
       </div>
 
